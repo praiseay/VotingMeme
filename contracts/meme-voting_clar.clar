@@ -18,3 +18,29 @@
 (define-private (mint-tokens (user principal) (amount uint))
   (ft-mint? my-token amount user))
 
+;; Submit a new meme
+(define-public (submit-meme)
+  (let
+    (
+      (meme-id (var-get next-meme-id))
+    )
+    (try! (stx-transfer? (var-get entry-fee) tx-sender (as-contract tx-sender)))
+    (map-set memes meme-id {creator: tx-sender, votes: u0, reward: u0})
+    (var-set next-meme-id (+ meme-id u1))
+    (ok meme-id)
+  )
+)
+
+;; Vote for a meme
+(define-public (vote-for-meme (meme-id uint))
+  (let
+    (
+      (meme (unwrap! (map-get? memes meme-id) (err err-not-found)))
+      (user tx-sender)
+    )
+    (asserts! (is-none (map-get? user-votes {user: user, meme-id: meme-id})) (err err-already-voted))
+    (map-set user-votes {user: user, meme-id: meme-id} true)
+    (map-set memes meme-id (merge meme {votes: (+ (get votes meme) u1)}))
+    (ok true)
+  )
+)
