@@ -65,3 +65,41 @@
     (ok true)
   )
 )
+
+;; Helper function to distribute reward for a single meme
+(define-private (distribute-reward (meme-id uint))
+  (let
+    (
+      (meme (unwrap! (map-get? memes meme-id) (err err-not-found)))
+      (reward (calculate-reward (get votes meme)))
+    )
+    (if (> reward u0)
+      (begin
+        (try! (as-contract (mint-tokens (get creator meme) reward)))
+        (map-set memes meme-id (merge meme {reward: (+ (get reward meme) reward)}))
+        (ok true)
+      )
+      (ok false)
+    )
+  )
+)
+
+;; Calculate reward based on votes (simple linear model)
+(define-private (calculate-reward (votes uint))
+  (* votes u1) ;; 1 token per vote
+)
+
+;; Helper function to create a list of meme IDs
+(define-private (list-meme-ids (count uint))
+  (map uint-to-buff (unwrap-panic (as-max-len? (list-of-n count) u1000)))
+)
+
+;; Helper function to convert uint to buff
+(define-private (uint-to-buff (id uint))
+  (unwrap-panic (to-consensus-buff? id))
+)
+
+;; Initialize the contract
+(begin
+  (try! (ft-mint? my-token u1000000000 contract-owner))
+)
