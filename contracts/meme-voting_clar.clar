@@ -44,3 +44,24 @@
     (ok true)
   )
 )
+
+;; Get meme details
+(define-read-only (get-meme (meme-id uint))
+  (map-get? memes meme-id)
+)
+
+;; Get total number of memes
+(define-read-only (get-meme-count)
+  (var-get next-meme-id)
+)
+
+;; Distribute rewards (to be called periodically)
+(define-public (distribute-rewards)
+  (let
+    (
+      (meme-count (var-get next-meme-id))
+    )
+    (map distribute-reward (list-meme-ids meme-count))
+    (ok true)
+  )
+)
